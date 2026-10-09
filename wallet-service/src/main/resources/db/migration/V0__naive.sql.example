@@ -1,0 +1,6 @@
+-- TEMPLATE ONLY: not executed by Flyway (.example extension).
+-- Chapter 2 / step 1.1: write your own migration, then compare with the document.
+-- TODO: accounts(id, owner_ref, currency, balance, created_at)
+-- TODO: transfers(id, from_account_id, to_account_id, amount, created_at)
+-- TODO: fixed sample accounts A, B, C as described in step 1.1.
+-- When ready, rename to V0__naive.sql and enable database configuration explicitly.

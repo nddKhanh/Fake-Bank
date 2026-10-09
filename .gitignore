@@ -1,6 +1,7 @@
 .env
 .local/
 **/target/
+**/node_modules/
 .idea/
 *.iml
 .vscode/

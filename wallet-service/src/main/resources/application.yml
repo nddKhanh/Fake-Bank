@@ -1,0 +1,32 @@
+spring:
+  # The UI scaffold starts without a database. Remove these exclusions once
+  # repositories, migrations and the read-only Ops datasource are implemented.
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+      - org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration
+  application:
+    name: wallet-service
+  datasource:
+    url: jdbc:postgresql://${WALLET_DB_HOST:localhost}:${WALLET_DB_PORT:5433}/${WALLET_DB_NAME:wallet}
+    username: ${WALLET_DB_USERNAME:wallet}
+    password: ${WALLET_DB_PASSWORD:wallet-local}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+  flyway:
+    enabled: false
+server:
+  port: ${WALLET_PORT:8080}
+bank:
+  url: ${BANK_URL:http://localhost:8081}
+ops:
+  username: ${OPS_DB_USERNAME:ops_reader}
+  password: ${OPS_DB_PASSWORD:ops-local}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

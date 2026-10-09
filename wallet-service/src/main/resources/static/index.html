@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="vi">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Wallet Ops · Database & Scenario Lab</title><link rel="stylesheet" href="styles.css"></head>
+<body>
+<aside class="sidebar">
+ <a class="brand" href="#overview"><span class="brand-mark">W</span><span>Wallet Ops<small>DATABASE & SCENARIO LAB</small></span></a>
+ <div class="nav-label">QUAN SÁT NGHIỆP VỤ</div>
+ <nav aria-label="Điều hướng chính">
+  <a href="#overview" data-nav="overview"><span>◉</span>Tổng quan<small>S1</small></a>
+  <a href="#transfers" data-nav="transfers"><span>⇄</span>Giao dịch<small>S2 · S3</small></a>
+  <a href="#accounts" data-nav="accounts"><span>▤</span>Tài khoản & sổ phụ<small>S4</small></a>
+  <a href="#queues" data-nav="queues"><span>≋</span>Bank & hàng đợi<small>S5</small></a>
+  <a href="#reconciliation" data-nav="reconciliation"><span>⊜</span>Đối soát<small>S6</small></a>
+ </nav>
+ <div class="nav-label">KIỂM THỬ THỰC TẾ</div>
+ <nav><a href="#lab" data-nav="lab"><span>⚗</span>Scenario Lab<small>S7</small></a><a href="#schema" data-nav="schema"><span>▦</span>Bản đồ database</a></nav>
+ <div class="sidebar-foot"><span class="dot muted"></span><span id="connection-label">Backend chưa triển khai</span><small>Chương 7 & 8 · Money transfer</small></div>
+</aside>
+<div class="workspace">
+ <header class="topbar"><span class="breadcrumb">WORKSPACE <span>/</span> <b id="breadcrumb">Tổng quan</b></span><div class="top-actions"><span id="source-label" class="badge neutral">API thật</span><button id="mode-toggle" class="button secondary">Xem dữ liệu minh họa</button></div></header>
+ <main>
+  <div class="page-heading"><div><span class="eyebrow">MONEY MOVEMENT OBSERVATORY</span><h1 id="page-title">Tổng quan hệ thống</h1><p id="page-description">Tiền nằm ở đâu, giao dịch đi đến đâu, dữ liệu có đúng không?</p></div><div class="refresh-controls"><label><input type="checkbox" id="auto-refresh" checked> Làm mới 3 giây</label><button id="refresh" class="button secondary">↻ Làm mới</button><small id="updated">Chưa lấy dữ liệu</small></div></div>
+  <div id="notice" class="notice" role="status"></div>
+  <div id="error" class="notice danger" role="alert" hidden></div>
+  <div id="content" aria-live="polite"></div>
+ </main>
+ <footer>Wallet Ops <span>Đọc dữ liệu qua ops_reader · Thao tác ghi chỉ trong profile lab</span></footer>
+</div>
+<dialog id="reset-dialog"><form method="dialog"><span class="eyebrow">RESET FIXTURES</span><h2>Xóa dữ liệu thử và nạp lại?</h2><p>Thao tác này có thể TRUNCATE dữ liệu trong database lab. Lịch sử chạy phải được giữ lại. Chỉ tiếp tục khi bạn đã kiểm tra đây là môi trường thử.</p><div class="dialog-actions"><button value="cancel" class="button secondary">Hủy</button><button id="confirm-reset" value="confirm" class="button destructive">Xác nhận reset</button></div></form></dialog>
+<script type="module" src="app.js"></script>
+</body></html>

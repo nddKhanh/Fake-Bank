@@ -1,0 +1,290 @@
+﻿[
+    {
+        "id":  "A1",
+        "fault":  "Ví A có 100.000. 1.000 request chuyển 80.000 song song (8.6 cho mức DB, xargs -P cho mức HTTP)",
+        "bug":  "Đọc số dư rồi ghi lại không khóa (bậc 1.2, 1.3)",
+        "expected":  "Đúng 1 transfer COMPLETED, 999 bị từ chối INSUFFICIENT_FUNDS và ghi FAILED. Số dư A = 20.000",
+        "title":  "Hai người dùng cùng bấm trả tiền khi ví không đủ cho cả hai; hoặc app bị bot bắn dồn",
+        "group":  "A"
+    },
+    {
+        "id":  "A2",
+        "fault":  "Hàng nghìn lần chuyển qua lại giữa hai ví, 16 luồng song song",
+        "bug":  "Khóa không có thứ tự (bậc 1.4)",
+        "expected":  "Không có lỗi deadlock nào; tổng tiền hai ví không đổi",
+        "title":  "A trả B và B trả A cùng lúc (hai chiều)",
+        "group":  "A"
+    },
+    {
+        "id":  "A3",
+        "fault":  "50 request song song cùng Idempotency-Key, cùng body",
+        "bug":  "Idempotency chỉ kiểm tra tuần tự (bậc 2.3, 2.4)",
+        "expected":  "Đúng 1 dòng transfers cho key đó, tiền trừ một lần, cả 50 phản hồi cùng một transferId",
+        "title":  "Client gửi lại cùng một yêu cầu khi mạng chậm",
+        "group":  "A"
+    },
+    {
+        "id":  "A4",
+        "fault":  "Hai request khác Idempotency-Key, cùng source (ORDER, 1234)",
+        "bug":  "Thiếu idempotency theo nghiệp vụ (bậc 2.5)",
+        "expected":  "Chỉ 1 khoản thanh toán cho đơn đó; lần hai bị chặn",
+        "title":  "Hai lần bấm \"thanh toán\" tạo hai key khác nhau cho cùng một đơn hàng",
+        "group":  "A"
+    },
+    {
+        "id":  "A5",
+        "fault":  "1.000 transfer cùng đích, nhiều luồng",
+        "bug":  "Điểm nghẽn do khóa (bậc 8.3)",
+        "expected":  "Không lỗi dữ liệu; account_seq không hổng (đèn 8); ghi lại thông lượng và thời gian chờ khóa",
+        "title":  "Hot account: một ví nhận tiền từ hàng nghìn người (ví người bán lớn)",
+        "group":  "A"
+    },
+    {
+        "id":  "A6",
+        "fault":  "Hạn mức 1.000.000/ngày; 20 request song song, mỗi cái 100.000",
+        "bug":  "Kiểm tra rồi mới cộng (không nguyên tử) (bậc 5.2)",
+        "expected":  "daily_usage.total_amount không bao giờ vượt 1.000.000; số request thành công ≤ 10",
+        "title":  "Hai giao dịch cùng kiểm tra hạn mức ngày trước khi ghi",
+        "group":  "A"
+    },
+    {
+        "id":  "A7",
+        "fault":  "Chạy hai worker quét cùng lúc trên một transfer kẹt",
+        "bug":  "Thiếu khóa/chuyển trạng thái có điều kiện (bậc 7.2)",
+        "expected":  "Transfer được xử lý một lần: mỗi (transfer_id, type) trong ledger_transactions đúng một dòng; không có hai bank_requests trùng attempt_no",
+        "title":  "Hai instance recovery cùng thấy một transfer kẹt",
+        "group":  "A"
+    },
+    {
+        "id":  "B1",
+        "fault":  "chaos_rules: lose-response bật",
+        "bug":  "Coi timeout là thất bại rồi hoàn tiền (bậc 4.4)",
+        "expected":  "Transfer đi qua UNKNOWN, hỏi lại (inquiry) thấy thành công, về COMPLETED. Không hoàn tiền. Bảng bank_transactions của bank có đúng 1 dòng cho client_request_id đó",
+        "title":  "Bank đã chuyển tiền nhưng response bị mất giữa đường",
+        "group":  "B"
+    },
+    {
+        "id":  "B2",
+        "fault":  "five-xx bật rồi tắt sau vài lần thử",
+        "bug":  "Retry sinh khóa mới nên bank chuyển hai lần (bậc 4.3)",
+        "expected":  "bank_requests có nhiều dòng attempt_no 1, 2, 3 nhưng cùng bank_request_id; cuối cùng COMPLETED; bank chỉ ghi 1 giao dịch",
+        "title":  "Bank lỗi 5xx tạm thời",
+        "group":  "B"
+    },
+    {
+        "id":  "B3",
+        "fault":  "reject bật",
+        "bug":  "Retry mù với lỗi vĩnh viễn; hoàn tiền sai (bậc 4.4, 4.7)",
+        "expected":  "Không retry. Đi FAILED rồi hoàn tiền, kết REFUNDED. Số dư người gửi về đúng như ban đầu. Có bút toán REFUND trỏ về bút toán gốc",
+        "title":  "Bank từ chối vĩnh viễn (tài khoản nhận không tồn tại)",
+        "group":  "B"
+    },
+    {
+        "id":  "B4",
+        "fault":  "down bật 10 phút rồi tắt",
+        "bug":  "Thiếu breaker/bulkhead (bậc 4.6)",
+        "expected":  "Circuit breaker mở; transfer mới nằm ở FUNDS_RESERVED, không dồn lời gọi sang bank; bank sống lại thì tất cả về COMPLETED; không ai bị trừ hai lần",
+        "title":  "Bank sập 10 phút",
+        "group":  "B"
+    },
+    {
+        "id":  "B5",
+        "fault":  "callback-dup bật (3 bản)",
+        "bug":  "Thiếu UNIQUE (bank_code, event_id) (bậc 4.5)",
+        "expected":  "bank_callbacks chỉ có 1 dòng cho event_id; trạng thái transfer đổi đúng một lần",
+        "title":  "Bank gửi cùng callback nhiều lần",
+        "group":  "B"
+    },
+    {
+        "id":  "B6",
+        "fault":  "callback-late bật",
+        "bug":  "Cho phép chuyển trạng thái lùi (bậc 3.1, 4.5)",
+        "expected":  "Transfer đã ở trạng thái cuối thì không đổi",
+        "title":  "Callback đến muộn, sau khi inquiry đã chốt kết quả",
+        "group":  "B"
+    },
+    {
+        "id":  "B7",
+        "fault":  "callback-flip bật",
+        "bug":  "Tin callback sau cùng một cách mù quáng (bậc 4.7)",
+        "expected":  "Transfer sang PENDING_REVIEW, có dòng reconciliation_issues; không tự hoàn tiền hay tự chốt; v_pipeline_health hiện đỏ",
+        "title":  "Bank báo thành công rồi lại báo thất bại",
+        "group":  "B"
+    },
+    {
+        "id":  "B8",
+        "fault":  "POST callback với chữ ký sai",
+        "bug":  "Không xác thực callback (bậc 4.5)",
+        "expected":  "Lưu với signature_valid = false, trạng thái IGNORED, không đổi transfer nào",
+        "title":  "Ai đó gửi callback giả",
+        "group":  "B"
+    },
+    {
+        "id":  "B9",
+        "fault":  "slow bật (6 đến 8 giây, timeout 3 giây)",
+        "bug":  "Timeout bị xử lý như thất bại (bậc 4.4)",
+        "expected":  "Transfer đi UNKNOWN, không bao giờ thẳng FAILED/hoàn tiền khi chưa biết bank đã làm hay chưa",
+        "title":  "Bank chậm hơn timeout cấu hình",
+        "group":  "B"
+    },
+    {
+        "id":  "B10",
+        "fault":  "Toxiproxy reset_peer hoặc docker compose stop postgres 30 giây",
+        "bug":  "Ghi nhiều bước ngoài một transaction (bậc 1.2)",
+        "expected":  "API trả 503 (lỗi hạ tầng), không để lại bút toán lẻ hay transfer nửa chừng; DB về thì client gửi lại cùng key và thành công đúng 1 lần",
+        "title":  "Mất kết nối Postgres giữa lúc đang xử lý",
+        "group":  "B"
+    },
+    {
+        "id":  "B11",
+        "fault":  "docker compose stop kafka, vẫn gửi transfer, rồi bật lại",
+        "bug":  "Gửi Kafka trong transaction DB / không có outbox (bậc 3.3, 3.4)",
+        "expected":  "API vẫn nhận bình thường; outbox_chua_gui tăng rồi về 0 sau khi Kafka sống lại; mọi transfer hoàn tất, không mất, không trùng hiệu ứng",
+        "title":  "Kafka sập 5 phút",
+        "group":  "B"
+    },
+    {
+        "id":  "B12",
+        "fault":  "Phát lại cùng event_id 3 lần cho consumer",
+        "bug":  "Consumer không idempotent (bậc 3.5)",
+        "expected":  "processed_messages chặn, số ledger_entries không tăng thêm",
+        "title":  "Cùng một message Kafka được giao lại nhiều lần",
+        "group":  "B"
+    },
+    {
+        "id":  "B13",
+        "fault":  "Đẩy một message JSON sai định dạng vào topic",
+        "bug":  "Một message hỏng chặn cả hàng đợi (bậc 3.6)",
+        "expected":  "Thử lại theo backoff vài lần rồi vào DLT; các message sau nó vẫn được xử lý",
+        "title":  "Một message hỏng (poison) làm consumer kẹt",
+        "group":  "B"
+    },
+    {
+        "id":  "B14",
+        "fault":  "Toxiproxy latency 3 giây tới Postgres, tải vừa",
+        "bug":  "Không có timeout/bulkhead (Giai đoạn 5)",
+        "expected":  "Trả lỗi/giới hạn gọn (503, 429), không lỗi dữ liệu; gỡ độc thì hồi phục",
+        "title":  "Postgres chậm, hết pool kết nối",
+        "group":  "B"
+    },
+    {
+        "id":  "C1",
+        "fault":  "CRASH_AT=API_AFTER_COMMIT",
+        "bug":  "Mất yêu cầu hoặc xử lý trùng",
+        "expected":  "Transfer CREATED có outbox; relay gửi tiếp; client gửi lại cùng key nhận lại đúng kết quả cũ, không tạo transfer thứ hai",
+        "title":  "API_AFTER_COMMIT",
+        "group":  "C"
+    },
+    {
+        "id":  "C2",
+        "fault":  "CRASH_AT=RELAY_AFTER_SEND",
+        "bug":  "Outbox không idempotent ở consumer",
+        "expected":  "Outbox gửi lại lần hai; consumer bỏ qua bản trùng nhờ processed_messages; tiền đúng",
+        "title":  "RELAY_AFTER_SEND",
+        "group":  "C"
+    },
+    {
+        "id":  "C3",
+        "fault":  "CRASH_AT=CONSUMER_BEFORE_COMMIT",
+        "bug":  "Ghi dở một nửa",
+        "expected":  "DB rollback sạch; Kafka giao lại; xử lý lại từ đầu, kết quả như chưa từng lỗi",
+        "title":  "CONSUMER_BEFORE_COMMIT",
+        "group":  "C"
+    },
+    {
+        "id":  "C4",
+        "fault":  "CRASH_AT=CONSUMER_AFTER_COMMIT",
+        "bug":  "Ghi sổ trùng",
+        "expected":  "Message giao lại, processed_messages chặn, chỉ ack; không ghi sổ lần hai",
+        "title":  "CONSUMER_AFTER_COMMIT",
+        "group":  "C"
+    },
+    {
+        "id":  "C5",
+        "fault":  "CRASH_AT=AFTER_DEBIT_BEFORE_BANK_CALL",
+        "bug":  "Giữ tiền mà không ai lo tiếp",
+        "expected":  "Tiền đã được giữ nhưng bank chưa nhận; recovery nhận ra transfer kẹt ở FUNDS_RESERVED và gọi bank (hoặc hoàn tiền nếu hết hạn); không trừ tiền lần hai",
+        "title":  "AFTER_DEBIT_BEFORE_BANK_CALL",
+        "group":  "C"
+    },
+    {
+        "id":  "C6",
+        "fault":  "CRASH_AT=AFTER_BANK_CALL_BEFORE_RESPONSE",
+        "bug":  "Gọi bank hai lần với hai khóa khác nhau",
+        "expected":  "Transfer về UNKNOWN, hỏi bank, ra kết quả thật; gửi lại bằng cùng bank_request_id, bank không chuyển hai lần",
+        "title":  "AFTER_BANK_CALL_BEFORE_RESPONSE",
+        "group":  "C"
+    },
+    {
+        "id":  "C7",
+        "fault":  "CRASH_AT=AFTER_CALLBACK_BEFORE_COMMIT",
+        "bug":  "Callback bị nuốt",
+        "expected":  "Callback vẫn ở RECEIVED, được xử lý lại sau khi khởi động; không mất, không xử lý đôi",
+        "title":  "AFTER_CALLBACK_BEFORE_COMMIT",
+        "group":  "C"
+    },
+    {
+        "id":  "C8",
+        "fault":  "CRASH_AT=RECOVERY_MID_RUN",
+        "bug":  "Recovery không an toàn khi bị gián đoạn",
+        "expected":  "Worker khác (hoặc chính nó sau khi khởi động lại) hoàn tất transfer; không có bước nào chạy hai lần",
+        "title":  "RECOVERY_MID_RUN",
+        "group":  "C"
+    },
+    {
+        "id":  "D1",
+        "fault":  "UPDATE ledger_entries SET amount = 1 ... rồi DELETE FROM ledger_entries",
+        "bug":  "Ràng buộc chỉ nằm ở code (bậc 1.8)",
+        "expected":  "Cả hai bị từ chối: ledger_entries is append-only",
+        "title":  "Ai đó sửa hoặc xóa sổ cái bằng SQL tay",
+        "group":  "D"
+    },
+    {
+        "id":  "D2",
+        "fault":  "BEGIN, thêm một ledger_transaction với đúng một dòng CREDIT 777, COMMIT",
+        "bug":  "Thiếu trigger cân bút toán (bậc 1.8)",
+        "expected":  "COMMIT thất bại: ledger_transaction ... is not balanced (diff=777)",
+        "title":  "Bút toán lệch (chỉ có một chân)",
+        "group":  "D"
+    },
+    {
+        "id":  "D3",
+        "fault":  "UPDATE accounts SET balance = -1 WHERE ... (ví người dùng)",
+        "bug":  "Số dư âm chỉ chặn ở code",
+        "expected":  "Bị CHECK từ chối",
+        "title":  "Số dư bị đặt âm",
+        "group":  "D"
+    },
+    {
+        "id":  "D4",
+        "fault":  "UPDATE accounts SET balance = balance + 500 WHERE ...",
+        "bug":  "Lệch tiền không ai biết (bậc 7.3)",
+        "expected":  "Hai đèn đỏ: \"Số dư lưu sẵn khớp sổ cái\" và \"Tổng số dư mọi tài khoản = 0\"; đối soát nội bộ báo BALANCE_CACHE_MISMATCH; cách sửa đúng là bút toán ADJUSTMENT, không UPDATE ngược lại",
+        "title":  "Số dư lưu sẵn bị sửa tay lệch khỏi sổ cái",
+        "group":  "D"
+    },
+    {
+        "id":  "D5",
+        "fault":  "Nhập báo cáo bank có 3 dòng: một dòng ta không có, một dòng ta có mà bank không, một dòng lệch số tiền",
+        "bug":  "Đối soát bỏ sót (bậc 7.4)",
+        "expected":  "reconciliation_issues có đúng 3 dòng: MISSING_INTERNALLY, MISSING_AT_BANK, AMOUNT_MISMATCH",
+        "title":  "Số liệu hai bên lệch nhau",
+        "group":  "D"
+    },
+    {
+        "id":  "D6",
+        "fault":  "INSERT thêm ledger_transactions cùng (transfer_id, type) đã có",
+        "bug":  "Chống ghi trùng chỉ ở code (bậc 1.8)",
+        "expected":  "Bị uq_ledger_txn_step từ chối",
+        "title":  "Một bước ghi sổ bị ghi hai lần",
+        "group":  "D"
+    },
+    {
+        "id":  "E1",
+        "fault":  "\"Bộ trộn\": chọn ngẫu nhiên 1.000 thao tác từ danh sách: chuyển hợp lệ, chuyển quá số dư, gửi trùng key, hoàn tiền, bật/tắt một công tắc bank, giết process. Dùng một hạt giống (seed) ghi lại, và in ra",
+        "bug":  "Lỗi nằm ở tổ hợp bạn không nghĩ tới (bậc 8.2)",
+        "expected":  "Hội tụ được; 8 đèn bằng 0. Nếu đỏ: in seed để chạy lại đúng chuỗi thao tác đó và gỡ lỗi",
+        "title":  "Cuộc sống không theo kịch bản",
+        "group":  "E"
+    }
+]

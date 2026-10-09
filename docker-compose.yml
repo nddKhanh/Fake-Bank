@@ -20,5 +20,24 @@ services:
       retries: 10
       start_period: 5s
 
+  wallet-postgres:
+    profiles: [wallet]
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${WALLET_DB_NAME:-wallet}
+      POSTGRES_USER: ${WALLET_DB_USERNAME:-wallet}
+      POSTGRES_PASSWORD: ${WALLET_DB_PASSWORD:-wallet-local}
+    ports:
+      - "127.0.0.1:${WALLET_DB_PORT:-5433}:5432"
+    volumes:
+      - wallet-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
 volumes:
   fake-bank-postgres-data:
+  wallet-postgres-data:
