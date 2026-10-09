@@ -5,6 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.*;
 
-/** TODO: implement persistence yourself. Deliberately does not extend JpaRepository. */
+/** Basic account persistence for chapter 2, step 1.1. */
 public interface AccountRepository extends JpaRepository<Account, UUID> {
 }

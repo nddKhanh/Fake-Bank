@@ -1,13 +1,14 @@
 package com.example.wallet.service;
 
+import com.example.wallet.dto.request.AccountResult;
+import com.example.wallet.dto.request.CreateAccount;
+import com.example.wallet.dto.request.UpdateAccount;
+
 import java.time.Instant;
 import java.util.*;
 
-/** TODO: implement the initial account CRUD use cases. */
+/** Initial account CRUD use cases, implemented by AccountServiceImpl. */
 public interface AccountService {
-    record CreateAccount(String ownerRef, String currency, String balance) {}
-    record UpdateAccount(String ownerRef, String currency, String balance) {}
-    record AccountResult(UUID id, String ownerRef, String currency, String balance, Instant createdAt) {}
     AccountResult create(CreateAccount command);
     AccountResult get(UUID id);
     List<AccountResult> list();

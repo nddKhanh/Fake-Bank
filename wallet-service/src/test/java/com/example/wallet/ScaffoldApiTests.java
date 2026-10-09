@@ -11,7 +11,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class ScaffoldApiTests {
  @Autowired MockMvc mvc;
  @Test void crudEndpointsRemainUnimplemented() throws Exception {
-  mvc.perform(get("/accounts")).andExpect(status().isNotImplemented());
+  mvc.perform(get("/accounts")).andExpect(status().isNotImplemented())
+   .andExpect(jsonPath("$.code").value(501))
+   .andExpect(jsonPath("$.success").value(false))
+   .andExpect(jsonPath("$.message").isNotEmpty())
+   .andExpect(jsonPath("$.data").doesNotExist())
+   .andExpect(jsonPath("$.timestamp").isNotEmpty());
   mvc.perform(get("/transfers")).andExpect(status().isNotImplemented());
   mvc.perform(post("/transfers").contentType("application/json").content("{\"amount\":\"100\"}")).andExpect(status().isNotImplemented());
  }
