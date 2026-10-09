@@ -37,7 +37,6 @@ function updateChrome(r) {
  $('#connection-label').textContent=state.demo?'Đang xem fixtures minh họa':state.capabilities.backendImplemented?'Đã kết nối backend':'Backend chưa triển khai';
  $('#notice').className=`notice ${state.demo?'demo':''}`;
  $('#notice').textContent=state.demo?'DỮ LIỆU MINH HỌA — toàn bộ số dư, giao dịch, đèn và lịch sử dưới đây là fixtures tĩnh để duyệt giao diện. Không đọc database, không chạy test, không tự chuyển sang minh họa khi API lỗi.':'KHUNG BACKEND — các API đọc dữ liệu và chạy kịch bản đang để TODO. Khi triển khai, dữ liệu đọc qua ops_reader; các màn S1–S6 không ghi vào database.';
- $('#auto-refresh').disabled=state.demo;
 }
 function pagination(data){const pages=Math.max(1,Math.ceil(data.total/data.size));return `<div class="pagination"><span>${data.total} bản ghi · trang ${data.page+1}/${pages}</span><button class="button secondary" data-page="${data.page-1}" ${data.page===0?'disabled':''}>← Trước</button><button class="button secondary" data-page="${data.page+1}" ${data.page+1>=pages?'disabled':''}>Sau →</button></div>`;}
 function transferRows(items){return items.map(t=>[transferLink(t.id),text(t.type),badge(t.status),`<span class="money">${money(t.amount)} ${text(t.currency)}</span>`,`<span class="mono">${text(t.sourceId||t.idempotencyKey)}</span>`,text(date(t.createdAt))]);}
@@ -137,7 +136,6 @@ $('#reset-dialog').addEventListener('close',async()=>{if($('#reset-dialog').retu
 $('#mode-toggle').onclick=async()=>{state.demo=!state.demo;state.capabilities=await api('/capabilities').catch(()=>({backendImplemented:false,labEnabled:false}));render();};
 $('#refresh').onclick=()=>render();
 window.addEventListener('hashchange',()=>render());
-setInterval(()=>{const r=route();if($('#auto-refresh').checked&&!state.demo&&!state.busy&&!state.writeBusy&&!document.hidden&&!document.querySelector('input:focus,select:focus,dialog[open]')&&!['schema','lab'].includes(r.page))render(true);},3000);
 async function init(){
  try{const response=await fetch('scenarios.json');if(!response.ok)throw Error('Không đọc được danh mục kịch bản.');state.scenarios=await response.json();}catch(e){showError(e.message);}
  state.capabilities=await api('/capabilities').catch(()=>({backendImplemented:false,labEnabled:false}));

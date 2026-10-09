@@ -34,7 +34,7 @@ chạy test, reset, bật/tắt chaos đều khóa; lịch sử mẫu được g
 | S7 Scenario Lab | 36 thẻ A–E, seed, 8 bước, kết quả từng ý, trước/sau, lịch sử |
 | Bản đồ DB | Cấu trúc dự kiến từ tài liệu, liên kết sang màn liên quan |
 
-Các màn có trạng thái loading/empty/error, tự làm mới mỗi 3 giây ở chế độ API thật,
+Các màn có trạng thái loading/empty/error, làm mới thủ công bằng nút “Làm mới”,
 và bố cục responsive. Tiền trong API là **chuỗi số nguyên** để không mất độ chính
 xác BIGINT khi JavaScript xử lý; không dùng số thập phân cho VND.
 

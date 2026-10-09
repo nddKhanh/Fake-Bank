@@ -10,7 +10,8 @@ const catalog=JSON.parse((await readFile(new URL('scenarios.json',root),'utf8'))
 const dom=new JSDOM(html,{url:'http://localhost:8080/',runScripts:'outside-only',pretendToBeVisual:true});
 const w=dom.window;
 w.demoGet=demoGet;
-w.setInterval=()=>0;
+let intervalCalls=0;
+w.setInterval=()=>{intervalCalls++;return 0;};
 const requests=[];
 w.fetch=async (url,opts={})=>{
  requests.push({url,method:opts.method||'GET'});
@@ -32,7 +33,8 @@ await wait(()=>q('#content').textContent.includes('Bất biến tiền'));
 assert.equal(qa('.check-row').length,8);
 assert.equal(qa('.check-row.fail').length,2);
 assert(q('#notice').textContent.includes('DỮ LIỆU MINH HỌA'));
-assert.equal(q('#auto-refresh').disabled,true);
+assert.equal(q('#auto-refresh'),null);
+assert.equal(intervalCalls,0);
 console.log('PASS: explicit demo mode, eight invariant checks and mismatch drilldown');
 await go('transfers',()=>!!q('#transfer-filter'));
 assert.equal(qa('tbody tr').length,3);
