@@ -24,7 +24,7 @@ public class Account {
     @Column(name = "owner_ref", nullable = false, length = 64)
     private String ownerRef;
 
-    @Column(nullable = false, columnDefinition = "char(3)")
+    @Column(nullable = false, length = 3)
     private String currency;
 
     @Column(nullable = false)

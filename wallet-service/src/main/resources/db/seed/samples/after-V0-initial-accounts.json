@@ -1,0 +1,24 @@
+{
+  "targetSchemaMigration": "db/migration/V0__naive.sql",
+  "note": "Only this initial V0 sample is allowed to define balances directly.",
+  "accounts": [
+    {
+      "id": "00000000-0000-0000-0000-00000000000a",
+      "ownerRef": "user-A",
+      "currency": "VND",
+      "balance": 100000
+    },
+    {
+      "id": "00000000-0000-0000-0000-00000000000b",
+      "ownerRef": "user-B",
+      "currency": "VND",
+      "balance": 50000
+    },
+    {
+      "id": "00000000-0000-0000-0000-00000000000c",
+      "ownerRef": "user-C",
+      "currency": "VND",
+      "balance": 0
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+-- Target schema migration: db/migration/Vx_y__replace_with_schema_name.sql
+-- Purpose: describe why this sample data is needed.
+-- Copy this file to ../scripts/R__after_Vx_y__your_description.sql.
+--
+-- BALANCE RULE:
+-- Do not INSERT or UPDATE accounts.balance in any seed after V0.
+-- Once ledger exists, create a valid TOPUP ledger transaction instead.
+
+-- Example account seed after V0. The database default keeps balance at zero.
+INSERT INTO accounts (id, owner_ref, currency)
+VALUES
+    ('replace-with-stable-uuid', 'replace-with-owner-ref', 'VND')
+ON CONFLICT DO NOTHING;
+
+-- Add rows required by the target schema migration below this line.

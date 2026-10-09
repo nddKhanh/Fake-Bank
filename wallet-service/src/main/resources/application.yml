@@ -1,6 +1,12 @@
 spring:
+  config:
+    import:
+      - optional:file:.env[.properties]
+      - optional:file:../.env[.properties]
   profiles:
-    default: ui
+    default:
+      - db
+      - db-seed
   application:
     name: wallet-service
   datasource:
@@ -10,9 +16,17 @@ spring:
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: none
+      ddl-auto: validate
   flyway:
-    enabled: false
+    enabled: true
+    locations:
+      - classpath:db/migration
+      - classpath:db/seed/scripts
+    default-schema: public
+    validate-on-migrate: true
+    validate-migration-naming: true
+    baseline-on-migrate: false
+    clean-disabled: true
 server:
   port: ${WALLET_PORT:8080}
 bank:

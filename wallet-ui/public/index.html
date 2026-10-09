@@ -19,13 +19,13 @@
 <div class="workspace">
  <header class="topbar"><span class="breadcrumb">WORKSPACE <span>/</span> <b id="breadcrumb">Tổng quan</b></span><div class="top-actions"><span id="source-label" class="badge neutral">API thật</span><button id="mode-toggle" class="button secondary">Xem dữ liệu minh họa</button></div></header>
  <main>
-  <div class="page-heading"><div><span class="eyebrow">MONEY MOVEMENT OBSERVATORY</span><h1 id="page-title">Tổng quan hệ thống</h1><p id="page-description">Tiền nằm ở đâu, giao dịch đi đến đâu, dữ liệu có đúng không?</p></div><div class="refresh-controls"><button id="refresh" class="button secondary">↻ Làm mới</button><small id="updated">Chưa lấy dữ liệu</small></div></div>
+  <div class="page-heading"><div><span class="eyebrow">MONEY MOVEMENT OBSERVATORY</span><h1 id="page-title">Tổng quan hệ thống</h1><p id="page-description">Tiền nằm ở đâu, giao dịch đi đến đâu, dữ liệu có đúng không?</p></div><div class="refresh-controls"><div><button id="refresh" class="button secondary">↻ Làm mới</button> <button id="reset-seed" class="button destructive" disabled>Khôi phục seed</button></div><small id="updated">Chưa lấy dữ liệu</small></div></div>
   <div id="notice" class="notice" role="status"></div>
   <div id="error" class="notice danger" role="alert" hidden></div>
   <div id="content" aria-live="polite"></div>
  </main>
- <footer>Wallet Ops <span>Đọc dữ liệu qua ops_reader · Thao tác ghi chỉ trong profile lab</span></footer>
+ <footer>Wallet Ops <span>Đọc dữ liệu qua ops_reader · Reset chỉ dùng local với profile db-seed</span></footer>
 </div>
-<dialog id="reset-dialog"><form method="dialog"><span class="eyebrow">RESET FIXTURES</span><h2>Xóa dữ liệu thử và nạp lại?</h2><p>Thao tác này có thể TRUNCATE dữ liệu trong database lab. Lịch sử chạy phải được giữ lại. Chỉ tiếp tục khi bạn đã kiểm tra đây là môi trường thử.</p><div class="dialog-actions"><button value="cancel" class="button secondary">Hủy</button><button id="confirm-reset" value="confirm" class="button destructive">Xác nhận reset</button></div></form></dialog>
+<dialog id="reset-dialog"><form method="dialog"><span class="eyebrow">KHÔI PHỤC SEED LOCAL</span><h2>Xóa giao dịch và nạp lại dữ liệu ban đầu?</h2><p>Thao tác này xóa toàn bộ transfer, xóa các tài khoản hiện tại và tạo lại user-A (100.000 VND), user-B (50.000 VND), user-C (0 VND). Không thể hoàn tác; chỉ dùng cho database local.</p><div class="dialog-actions"><button value="cancel" class="button secondary">Hủy</button><button id="confirm-reset" value="confirm" class="button destructive">Xóa và khôi phục seed</button></div></form></dialog>
 <script type="module" src="app.js"></script>
 </body></html>

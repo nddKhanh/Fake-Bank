@@ -54,7 +54,7 @@ chuyển đổi và validation. POST /transfers ở bậc 1.1 **không yêu cầ
 ## Chạy giao diện riêng
 
 Từ F:\HIT\Fake-Bank\wallet-ui chạy npm.cmd start, mở http://localhost:3000.
-Ops/Lab/logging nằm trong ops-service, không còn thuộc wallet-service.
+Ops/Lab/logging nằm trong `logging-service`, không còn thuộc `wallet-service`.
 
 ## Khi tự nối PostgreSQL
 

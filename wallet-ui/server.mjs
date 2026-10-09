@@ -18,7 +18,7 @@ export function createUiServer(opsUrl='http://127.0.0.1:8082') {
     res.writeHead(response.statusCode,{'content-type':response.headers['content-type']||'application/json','cache-control':'no-store'});response.pipe(res);
    });
    upstream.setTimeout(10000,()=>upstream.destroy(Error('Ops API timeout')));
-   upstream.on('error',()=>{if(!res.headersSent){res.writeHead(502,{'content-type':'application/json; charset=utf-8'});res.end(JSON.stringify({code:'OPS_UNAVAILABLE',message:'Ops API chưa chạy. Bật ops-service ở cổng 8082 hoặc xem dữ liệu minh họa.'}));}else res.destroy();});
+   upstream.on('error',()=>{if(!res.headersSent){res.writeHead(502,{'content-type':'application/json; charset=utf-8'});res.end(JSON.stringify({code:'OPS_UNAVAILABLE',message:'Ops API chưa chạy. Bật logging-service ở cổng 8082 hoặc xem dữ liệu minh họa.'}));}else res.destroy();});
    req.pipe(upstream);return;
   }
   if(req.method!=='GET'&&req.method!=='HEAD'){res.writeHead(405);res.end();return;}
