@@ -1,4 +1,4 @@
-# Bắt đầu chương 2 — bậc 1.1
+﻿# Bắt đầu chương 2 — bậc 1.1
 
 Khung bắt đầu chỉ có Account và Transfer tối thiểu, chưa có logic thực thi.
 Không thêm transaction, khóa, sổ cái, trạng thái, hạn mức hay idempotency ở bậc này.
@@ -6,8 +6,7 @@ Các interface nâng cao đã dựng trước đó dành cho các bậc sau.
 
 ## Các file bạn bắt đầu viết
 
-1. `src/main/resources/db/migration/V0__naive.sql.example`: tự viết schema và dữ liệu
-   mẫu ở bậc 1.1; đổi đuôi thành `.sql` khi đã sẵn sàng.
+1. `src/main/resources/db/migration/V0__naive.sql`: schema V0 đã có; bạn tự thêm migration version mới khi tiến tới các bậc sau.
 2. `domain/Account.java`, `domain/Transfer.java`: cấu trúc dữ liệu ban đầu.
 3. `infrastructure/AccountRepository.java`, `TransferRepository.java`: tự thêm lớp
    implementation để lưu/đọc database. Chưa có bean hay truy vấn được viết sẵn.
@@ -71,11 +70,7 @@ Từ thư mục repo, tạo `.env` theo `.env.example`, rồi:
 docker compose --profile wallet up -d wallet-postgres
 ```
 
-Sau khi viết migration, bỏ ba mục `spring.autoconfigure.exclude` trong
-`application.yml`, đặt `spring.flyway.enabled: true`, và tự triển khai repository/
-service. Database ví mặc định localhost:5433/wallet. Spring Boot không tự nạp `.env`;
-export biến môi trường nếu thông số khác default. Giữ datasource Ops chỉ đọc riêng
-khi bạn bắt đầu nối UI với dữ liệu thật.
+V0__naive.sql đã có. Chạy với profile db: .\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=db". Database mặc định localhost:5433/wallet. Profile db bật JDBC/Flyway; JPA và nghiệp vụ vẫn chưa triển khai. Spring Boot không tự nạp .env; export biến môi trường nếu thông số khác default. Giữ datasource Ops chỉ đọc riêng khi nối UI với dữ liệu thật.
 
 Đọc tiếp bậc 1.2–1.4 sau khi bạn đã làm chạy được bản 1.1 và ghi lại lỗi của CRUD
 ở `docs/why-crud-fails.md`. Không nối ngay các interface ledger/recovery/runner vào

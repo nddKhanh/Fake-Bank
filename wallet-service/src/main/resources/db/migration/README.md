@@ -1,5 +1,1 @@
-Migration ví để bạn tự viết theo lộ trình money-transfer-plan.md.
-
-Chưa có migration SQL hay dữ liệu seed. Datasource và Flyway đang tắt ở khung UI.
-Khi triển khai backend, thêm migration theo giai đoạn; các view Ops tham khảo mục
-8.3. Dùng database riêng của ví, không dùng schema Fake Bank để ghi sổ ví.
+﻿V0__naive.sql tạo accounts và transfers (bậc 1.1), không seed. Bật profile db để chạy Flyway. Tên file: V<version>__<description>.sql (hai dấu gạch dưới). Ví dụ V0__naive.sql, V1_5__ledger_entries.sql. Không sửa migration đã chạy; thêm version mới. Lịch sử nằm trong public.flyway_schema_history.

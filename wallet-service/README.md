@@ -1,4 +1,4 @@
-# Wallet service & Ops Console — khung chương 7–8
+﻿# Wallet service & Ops Console — khung chương 7–8
 
 **Bắt đầu học CRUD theo chương 2:** xem [docs/crud-start.md](docs/crud-start.md).
 AccountService và CrudTransferService là điểm bắt đầu bậc 1.1; TransferService
@@ -6,7 +6,7 @@ nâng cao và các interface ledger/recovery/runner dành cho các bậc sau.
 
 Giao diện đã triển khai. **Backend nghiệp vụ và truy vấn database chủ ý để trống**
 theo yêu cầu: interface, DTO và controller có TODO; endpoint chưa triển khai trả
-`501 NOT_IMPLEMENTED`. Không có giao dịch thật, runner thật, seed DB, migration ví,
+`501 NOT_IMPLEMENTED`. Không có giao dịch thật, runner thật, seed DB,
 retry, ghi sổ, callback hay SQL thực thi.
 
 ## Chạy giao diện ngay (không cần Docker/database)
@@ -103,7 +103,7 @@ không dựa riêng vào trạng thái nút trên trình duyệt.
 độc lập. Khi bắt đầu triển khai backend:
 
 1. Thêm migration ví theo từng giai đoạn kế hoạch; tạo view mục 8.3.
-2. Bỏ ba exclusions, bật Flyway và cấu hình writer datasource.
+2. Bật profile db để chạy Flyway/JDBC. Khi triển khai JPA, bỏ exclusion Hibernate trong application-db.yml.
 3. Tạo datasource riêng dùng `ops_reader`, chỉ SELECT các bảng/view cần dùng.
 4. Implement OpsQueryService; không gửi mật khẩu/hash khóa API ra frontend.
 5. Kết nối Fake Bank qua HTTP, giữ hai database tách biệt.
@@ -158,3 +158,22 @@ npm.cmd test --prefix ui-tests
 Bao gồm chuyển API/minh họa, 8 đèn, bộ lọc/drilldown, dòng thời gian, sổ phụ,
 36 thẻ kịch bản, khóa các thao tác ghi và escaping nội dung tìm kiếm. Kiểm tra DOM
 không thay thế việc kiểm tra bố cục trực tiếp trên trình duyệt.
+
+## Flyway V0
+
+V0__naive.sql đã tạo hai bảng accounts và transfers, không seed dữ liệu.
+Bật Docker Desktop và database ví trước, rồi chạy trong wallet-service:
+
+```powershell
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=db"
+```
+
+JDBC mặc định: localhost:5433/wallet, user wallet, password wallet-local.
+Override bằng WALLET_DB_HOST, WALLET_DB_PORT, WALLET_DB_NAME,
+WALLET_DB_USERNAME, WALLET_DB_PASSWORD khi cần; Spring Boot không tự nạp .env.
+
+Tên migration: V<version>__<description>.sql, có HAI dấu gạch dưới.
+Ví dụ: V0__naive.sql, V1_5__ledger_entries.sql.
+Flyway tự tạo public.flyway_schema_history và chỉ chạy mỗi version một lần.
+Không sửa migration đã chạy; thêm version mới cho thay đổi tiếp theo.
+Profile db chỉ bật JDBC/Flyway, chưa bật JPA và chưa triển khai nghiệp vụ.
