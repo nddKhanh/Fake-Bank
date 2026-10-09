@@ -1,6 +1,5 @@
 spring:
-  # The UI scaffold starts without a database. Remove these exclusions once
-  # repositories, migrations and the read-only Ops datasource are implemented.
+  # CRUD scaffold starts without a database; profile db enables JDBC/Flyway.
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
@@ -22,9 +21,6 @@ server:
   port: ${WALLET_PORT:8080}
 bank:
   url: ${BANK_URL:http://localhost:8081}
-ops:
-  username: ${OPS_DB_USERNAME:ops_reader}
-  password: ${OPS_DB_PASSWORD:ops-local}
 management:
   endpoints:
     web:

@@ -1,18 +1,18 @@
-﻿# Bắt đầu chương 2 — bậc 1.1
+# Bắt đầu chương 2 — bậc 1.1
 
 Khung bắt đầu chỉ có Account và Transfer tối thiểu, chưa có logic thực thi.
 Không thêm transaction, khóa, sổ cái, trạng thái, hạn mức hay idempotency ở bậc này.
-Các interface nâng cao đã dựng trước đó dành cho các bậc sau.
+Các khung service nâng cao đã xóa; chỉ bổ sung khi học đến giai đoạn tương ứng.
 
 ## Các file bạn bắt đầu viết
 
 1. `src/main/resources/db/migration/V0__naive.sql`: schema V0 đã có; bạn tự thêm migration version mới khi tiến tới các bậc sau.
 2. `domain/Account.java`, `domain/Transfer.java`: cấu trúc dữ liệu ban đầu.
-3. `infrastructure/AccountRepository.java`, `TransferRepository.java`: tự thêm lớp
+3. `repository/AccountRepository.java`, `TransferRepository.java`: tự thêm lớp
    implementation để lưu/đọc database. Chưa có bean hay truy vấn được viết sẵn.
-4. `application/AccountService.java`, `CrudTransferService.java`: tự viết lớp
+4. `service/AccountService.java`, `CrudTransferService.java`: tự viết lớp
    implementation của use case CRUD/chuyển tiền ban đầu.
-5. `api/AccountController.java`, `TransferController.java`: thay các lệnh ném
+5. `controller/AccountController.java`, `TransferController.java`: thay các lệnh ném
    NotImplemented bằng lời gọi service của bạn.
 
 Giữ riêng `/api/ops/*`: đây là API quan sát, không phải API nghiệp vụ CRUD.
@@ -49,18 +49,12 @@ Ví dụ request để bạn biết DTO cần nhận gì; hiện mọi endpoint 
 
 Tiền ở DTO là chuỗi số nguyên; domain dùng long tương ứng BIGINT. Bạn tự viết
 chuyển đổi và validation. POST /transfers ở bậc 1.1 **không yêu cầu Idempotency-Key**;
-đến giai đoạn 2 mới nối interface TransferService nâng cao.
+đến giai đoạn 2 mới bổ sung khung idempotency.
 
-## Chạy giao diện
+## Chạy giao diện riêng
 
-```powershell
-cd F:\HIT\Fake-Bank\wallet-service
-.\mvnw.cmd spring-boot:run
-```
-
-Mở http://localhost:8080 và bấm **Xem dữ liệu minh họa**. Không cần Docker để xem UI.
-Giao diện hiện là Ops Console để quan sát/test, chưa có form nhập CRUD; bạn có thể
-gọi API CRUD bằng Postman hoặc curl sau khi tự triển khai.
+Từ F:\HIT\Fake-Bank\wallet-ui chạy npm.cmd start, mở http://localhost:3000.
+Ops/Lab/logging nằm trong ops-service, không còn thuộc wallet-service.
 
 ## Khi tự nối PostgreSQL
 
