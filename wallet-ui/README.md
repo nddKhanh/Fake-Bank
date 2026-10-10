@@ -35,10 +35,14 @@ dịch theo seed để kết quả tái lập; người dùng không cần tạo
 V0 hiện tại, chỉ có thể tạo giao dịch happy-path qua `POST /transfers`; thay đổi
 amount/tài khoản không tạo được timeout, retry hay crash.
 
-Bốn thẻ **CRUD Lab V0** chạy được ngay trên database local: kiểm tra amount bằng
-0, chuyển quá số dư, gửi trùng payload và 20 request đồng thời. Mỗi thẻ tự reset
+Năm thẻ **CRUD Lab V0** chạy được ngay trên database local: kiểm tra amount bằng
+0, lỗi one-shot sau debit, chuyển quá số dư, gửi trùng payload và 20 request đồng thời. Mỗi thẻ tự reset
 seed và để lại trạng thái sau thí nghiệm để có thể mở trang Tài khoản/Giao dịch
-đối chiếu. Các thẻ nâng cao A–E vẫn khóa cho đến khi backend có cơ chế tương ứng.
+đối chiếu. Mở mục **Luồng thực thi & điểm gây lỗi** trên từng thẻ để xem thứ tự
+controller → service → repository đang chạy, nguyên nhân và file/hàm nên bắt đầu
+nâng cấp. Các thẻ nâng cao A–E vẫn khóa cho đến khi backend có cơ chế tương ứng;
+chúng ghi rõ **Luồng dự kiến (chưa có code)** để không nhầm thiết kế tương lai với
+implementation hiện tại.
 
 Ở chế độ API thật, nút **Khôi phục seed** xóa toàn bộ transfer/tài khoản local và
 tạo lại ba tài khoản A/B/C với số dư 100.000/50.000/0 VND. Nút bị khóa ở chế độ

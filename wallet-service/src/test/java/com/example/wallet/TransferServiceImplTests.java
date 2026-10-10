@@ -3,7 +3,9 @@ package com.example.wallet;
 import com.example.wallet.domain.*;
 import com.example.wallet.repository.*;
 import com.example.wallet.service.TransferService.CreateTransfer;
+import com.example.wallet.service.LocalTransferFaults;
 import com.example.wallet.service.impl.TransferServiceImpl;
+import org.springframework.beans.factory.ObjectProvider;
 import org.junit.jupiter.api.Test;
 import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -27,6 +29,23 @@ class TransferServiceImplTests {
         when(accounts.saveAndFlush(b)).thenThrow(new IllegalStateException("credit fails"));
         assertThrows(IllegalStateException.class,()->new TransferServiceImpl(accounts,transfers).create(new CreateTransfer(a.getId(),b.getId(),"30000")));
         verify(accounts).saveAndFlush(a);verify(transfers,never()).saveAndFlush(any());
+    }
+    @Test void localAfterDebitFailpointExposesTheRealPartialWrite() {
+        var accounts=mock(AccountRepository.class);var transfers=mock(TransferRepository.class);
+        var a=account(100000);var b=account(50000);
+        when(accounts.findById(a.getId())).thenReturn(Optional.of(a));when(accounts.findById(b.getId())).thenReturn(Optional.of(b));
+        var faults=new LocalTransferFaults();faults.arm(LocalTransferFaults.Point.AFTER_DEBIT);
+        @SuppressWarnings("unchecked") var provider=(ObjectProvider<LocalTransferFaults>)mock(ObjectProvider.class);
+        doAnswer(invocation->{
+            @SuppressWarnings("unchecked") var consumer=(java.util.function.Consumer<LocalTransferFaults>)invocation.getArgument(0);
+            consumer.accept(faults);return null;
+        }).when(provider).ifAvailable(any());
+
+        assertThrows(LocalTransferFaults.InjectedTransferFailure.class,
+                ()->new TransferServiceImpl(accounts,transfers,provider).create(new CreateTransfer(a.getId(),b.getId(),"30000")));
+
+        assertEquals(70000,a.getBalance());assertEquals(50000,b.getBalance());
+        verify(accounts).saveAndFlush(a);verify(accounts,never()).saveAndFlush(b);verify(transfers,never()).saveAndFlush(any());
     }
     private Account account(long balance) {var a=new Account();a.setId(UUID.randomUUID());a.setCurrency("VND");a.setBalance(balance);return a;}
 }

@@ -57,7 +57,10 @@ public final class OpsContracts {
                                      String referencedTable, String referencedColumn) {}
     public record ExperimentRequest(boolean confirmed) {}
     public record CrudSnapshot(Map<String,String> balances, long transferCount) {}
-    public record CrudExperimentResult(String id, String title, String verdict, String explanation,
-                                       List<Integer> httpStatuses, CrudSnapshot before, CrudSnapshot after) {}
+    public record ExperimentAction(int sequence, String method, String path, String request, int httpStatus) {}
+    public record CrudExperimentResult(UUID runId, Instant executedAt, String executionMode,
+                                       String id, String title, String verdict, String explanation,
+                                       List<ExperimentAction> actions, List<Integer> httpStatuses,
+                                       CrudSnapshot before, CrudSnapshot after) {}
 }
 

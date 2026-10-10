@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +17,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.time.Instant;
+import java.util.UUID;
 
 import static com.example.ops.ops.OpsContracts.*;
 
@@ -36,48 +41,65 @@ public class CrudExperimentService {
     }
 
     public CrudExperimentResult run(String id) {
+        RunTrace trace = new RunTrace();
         reset.reset();
+        trace.record("POST", "/api/dev/reset", "confirmed=true", 200);
         CrudSnapshot before = snapshot();
         return switch (id.toUpperCase()) {
-            case "V0-VALIDATION" -> validation(before);
-            case "V0-OVERDRAFT" -> overdraft(before);
-            case "V0-DUPLICATE" -> duplicate(before);
-            case "V0-CONCURRENCY" -> concurrency(before);
+            case "V0-VALIDATION" -> validation(before, trace);
+            case "V0-PARTIAL-WRITE" -> partialWrite(before, trace);
+            case "V0-OVERDRAFT" -> overdraft(before, trace);
+            case "V0-DUPLICATE" -> duplicate(before, trace);
+            case "V0-CONCURRENCY" -> concurrency(before, trace);
             default -> throw new IllegalArgumentException("Unknown CRUD experiment: " + id);
         };
     }
 
-    private CrudExperimentResult validation(CrudSnapshot before) {
-        int status = transfer("0");
+    private CrudExperimentResult validation(CrudSnapshot before, RunTrace trace) {
+        int status = transfer("0", trace);
         CrudSnapshot after = snapshot();
         boolean safe = status == 400 && before.equals(after);
         return result("V0-VALIDATION", "Amount bằng 0", safe ? "SAFE" : "UNEXPECTED",
                 safe ? "Request bị từ chối và database không đổi. Validation cơ bản đang hoạt động."
                         : "Kết quả khác kỳ vọng: kiểm tra HTTP status và snapshot.",
-                List.of(status), before, after);
+                List.of(status), before, after, trace);
     }
 
-    private CrudExperimentResult overdraft(CrudSnapshot before) {
-        int status = transfer("120000");
+    private CrudExperimentResult overdraft(CrudSnapshot before, RunTrace trace) {
+        int status = transfer("120000", trace);
         CrudSnapshot after = snapshot();
         boolean reproduced = status == 201 && Long.parseLong(after.balances().get("user-A")) < 0;
         return result("V0-OVERDRAFT", "Chuyển quá số dư", reproduced ? "BUG_REPRODUCED" : "NOT_REPRODUCED",
                 reproduced ? "Wallet V0 chấp nhận giao dịch và để user-A âm vì chưa kiểm tra đủ số dư."
                         : "Không thấy số dư âm; logic có thể đã được nâng cấp.",
-                List.of(status), before, after);
+                List.of(status), before, after, trace);
     }
 
-    private CrudExperimentResult duplicate(CrudSnapshot before) {
-        List<Integer> statuses = List.of(transfer("10000"), transfer("10000"));
+    private CrudExperimentResult partialWrite(CrudSnapshot before, RunTrace trace) {
+        int armStatus = armFault("AFTER_DEBIT", trace);
+        int transferStatus = transfer("30000", trace);
+        CrudSnapshot after = snapshot();
+        boolean reproduced = armStatus == 200 && transferStatus >= 500
+                && "70000".equals(after.balances().get("user-A"))
+                && "50000".equals(after.balances().get("user-B"))
+                && after.transferCount() == 0;
+        return result("V0-PARTIAL-WRITE", "Lỗi sau khi trừ tiền", reproduced ? "BUG_REPRODUCED" : "NOT_REPRODUCED",
+                reproduced ? "API lỗi sau bước debit: A đã mất 30.000, B chưa nhận và không có transfer để truy vết."
+                        : "Không thấy partial write; logic có thể đã được bọc transaction.",
+                List.of(transferStatus), before, after, trace);
+    }
+
+    private CrudExperimentResult duplicate(CrudSnapshot before, RunTrace trace) {
+        List<Integer> statuses = List.of(transfer("10000", trace), transfer("10000", trace));
         CrudSnapshot after = snapshot();
         boolean reproduced = statuses.stream().allMatch(status -> status == 201) && after.transferCount() == 2;
         return result("V0-DUPLICATE", "Gửi lại cùng một yêu cầu", reproduced ? "BUG_REPRODUCED" : "NOT_REPRODUCED",
                 reproduced ? "Cùng payload tạo hai transfer và trừ tiền hai lần vì V0 chưa có Idempotency-Key."
                         : "Yêu cầu trùng đã bị chặn hoặc kết quả khác kỳ vọng.",
-                statuses, before, after);
+                statuses, before, after, trace);
     }
 
-    private CrudExperimentResult concurrency(CrudSnapshot before) {
+    private CrudExperimentResult concurrency(CrudSnapshot before, RunTrace trace) {
         int requests = 20;
         CountDownLatch ready = new CountDownLatch(requests);
         CountDownLatch start = new CountDownLatch(1);
@@ -88,7 +110,7 @@ public class CrudExperimentService {
                 futures.add(pool.submit(() -> {
                     ready.countDown();
                     start.await();
-                    return transfer("10000");
+                    return transfer("10000", trace);
                 }));
             }
             ready.await();
@@ -107,7 +129,7 @@ public class CrudExperimentService {
                     evidence + (reproduced
                             ? "V0 không khóa tài khoản và không giới hạn theo số dư."
                             : "Lần chạy này chưa tái hiện lỗi; chạy lại vì race condition không luôn xuất hiện giống nhau."),
-                    statuses, before, after);
+                    statuses, before, after, trace);
         } catch (Exception error) {
             throw new IllegalStateException("Concurrency experiment failed", error);
         } finally {
@@ -116,11 +138,25 @@ public class CrudExperimentService {
         }
     }
 
-    private int transfer(String amount) {
-        return wallet.post().uri("/transfers")
+    private int transfer(String amount, RunTrace trace) {
+        int sequence = trace.nextSequence();
+        int status = wallet.post().uri("/transfers")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(Map.of("fromAccountId", A, "toAccountId", B, "amount", amount))
                 .exchange((request, response) -> response.getStatusCode().value());
+        trace.record(sequence, "POST", "/transfers",
+                "from=" + A + ", to=" + B + ", amount=" + amount, status);
+        return status;
+    }
+
+    private int armFault(String point, RunTrace trace) {
+        int sequence = trace.nextSequence();
+        int status = wallet.post().uri("/api/dev/faults/next-transfer")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("point", point, "confirmed", true))
+                .exchange((request, response) -> response.getStatusCode().value());
+        trace.record(sequence, "POST", "/api/dev/faults/next-transfer", "point=" + point, status);
+        return status;
     }
 
     private CrudSnapshot snapshot() {
@@ -137,7 +173,32 @@ public class CrudExperimentService {
     }
 
     private static CrudExperimentResult result(String id, String title, String verdict, String explanation,
-                                               List<Integer> statuses, CrudSnapshot before, CrudSnapshot after) {
-        return new CrudExperimentResult(id, title, verdict, explanation, List.copyOf(statuses), before, after);
+                                               List<Integer> statuses, CrudSnapshot before, CrudSnapshot after,
+                                               RunTrace trace) {
+        return new CrudExperimentResult(UUID.randomUUID(), Instant.now(), "LIVE_BACKEND",
+                id, title, verdict, explanation, trace.actions(), List.copyOf(statuses), before, after);
+    }
+
+    private static final class RunTrace {
+        private final AtomicInteger sequence = new AtomicInteger();
+        private final List<ExperimentAction> actions = Collections.synchronizedList(new ArrayList<>());
+
+        private int nextSequence() {
+            return sequence.incrementAndGet();
+        }
+
+        private void record(String method, String path, String request, int status) {
+            record(nextSequence(), method, path, request, status);
+        }
+
+        private void record(int order, String method, String path, String request, int status) {
+            actions.add(new ExperimentAction(order, method, path, request, status));
+        }
+
+        private List<ExperimentAction> actions() {
+            synchronized (actions) {
+                return actions.stream().sorted(Comparator.comparingInt(ExperimentAction::sequence)).toList();
+            }
+        }
     }
 }

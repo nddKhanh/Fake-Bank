@@ -64,7 +64,7 @@ hay global run lock. Reset seed V0 cơ bản đã có, nhưng chưa lưu lịch 
 phục hồi trạng thái nâng cao và chưa điều phối kịch bản. Các API ghi `/api/lab/*`
 tiếp tục trả `501` và capability `labEnabled=false`.
 
-Riêng bốn thí nghiệm `V0-VALIDATION`, `V0-OVERDRAFT`, `V0-DUPLICATE` và
+Riêng năm thí nghiệm `V0-VALIDATION`, `V0-PARTIAL-WRITE`, `V0-OVERDRAFT`, `V0-DUPLICATE` và
 `V0-CONCURRENCY` đã chạy thật qua `/api/ops/experiments/*`. Chúng chỉ chứng minh
 đặc tính/lỗi của CRUD hiện tại; không thay thế ScenarioRunner nâng cao và không
 được báo PASS cho các invariant chưa tồn tại.

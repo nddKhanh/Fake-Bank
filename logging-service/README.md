@@ -38,10 +38,13 @@ Endpoint reset chỉ nhận request từ localhost và chuyển tiếp đến
 `wallet-service /api/dev/reset`; nó không ghi qua JDBC read-only của Logging
 Service. Wallet phải chạy profile `db-seed`.
 
-Các experiment local hiện có: `V0-VALIDATION`, `V0-OVERDRAFT`,
+Các experiment local hiện có: `V0-VALIDATION`, `V0-PARTIAL-WRITE`, `V0-OVERDRAFT`,
 `V0-DUPLICATE`, `V0-CONCURRENCY`. Mỗi lần chạy tự reset seed, gọi API
 `/transfers`, rồi đọc lại số dư và số transfer để trả bằng chứng trước/sau. Đây là
-công cụ chứng minh lỗi của V0, không sửa logic chuyển tiền.
+công cụ chứng minh lỗi của V0, không sửa logic chuyển tiền. Mỗi kết quả có
+`runId`, `executedAt`, `executionMode=LIVE_BACKEND` và danh sách HTTP action thật.
+Test `CrudExperimentServiceTests` xác nhận runner gọi đúng endpoint Wallet thay vì
+tự dựng kết quả.
 
 ## Scenario Lab
 

@@ -6,6 +6,8 @@ import com.example.wallet.repository.TransferRepository;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.Instant;
 import java.util.List;
@@ -21,14 +23,23 @@ public class LocalSeedResetService {
 
     private final AccountRepository accounts;
     private final TransferRepository transfers;
+    private final ObjectProvider<LocalTransferFaults> localFaults;
 
-    public LocalSeedResetService(AccountRepository accounts, TransferRepository transfers) {
+    @Autowired
+    public LocalSeedResetService(AccountRepository accounts, TransferRepository transfers,
+                                 ObjectProvider<LocalTransferFaults> localFaults) {
         this.accounts = accounts;
         this.transfers = transfers;
+        this.localFaults = localFaults;
+    }
+
+    public LocalSeedResetService(AccountRepository accounts, TransferRepository transfers) {
+        this(accounts, transfers, null);
     }
 
     @Transactional
     public ResetResult reset() {
+        if (localFaults != null) localFaults.ifAvailable(LocalTransferFaults::clear);
         long removedTransfers = transfers.count();
         long removedAccounts = accounts.count();
 

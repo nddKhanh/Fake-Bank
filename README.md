@@ -80,10 +80,11 @@ Reset không thể hoàn tác, chỉ nhận request từ localhost và chỉ t�
 
 ### Thí nghiệm lỗi CRUD V0
 
-Mở **Scenario Lab → Thí nghiệm thật trên CRUD V0**. Bốn nút ở đầu trang tự reset
+Mở **Scenario Lab → Thí nghiệm thật trên CRUD V0**. Năm nút ở đầu trang tự reset
 seed, gọi Wallet thật và hiển thị HTTP status, số dư cùng số transfer trước/sau:
 
 - amount bằng 0 — validation phải từ chối và không đổi dữ liệu;
+- lỗi one-shot sau debit — A bị trừ nhưng B chưa nhận và chưa có transfer;
 - chuyển 120.000 từ tài khoản chỉ có 100.000 — tái hiện số dư âm;
 - gửi cùng payload hai lần — tái hiện thiếu idempotency;
 - 20 request đồng thời — tái hiện lỗi lost update/tổng tiền do không khóa.

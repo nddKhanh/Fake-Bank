@@ -63,6 +63,7 @@ class OpsControllerTests {
                 .andExpect(jsonPath("$.labEnabled").value(false))
                 .andExpect(jsonPath("$.resetEnabled").value(true))
                 .andExpect(jsonPath("$.crudExperimentsEnabled").value(true))
+                .andExpect(jsonPath("$.crudExperimentsMode").value("LIVE_BACKEND"))
                 .andExpect(jsonPath("$.dataSource").value("WALLET_V0_READ_ONLY"));
         mvc.perform(get("/api/ops/accounts?page=-1")).andExpect(status().isBadRequest());
         mvc.perform(get("/api/ops/transfers?size=201")).andExpect(status().isBadRequest());
@@ -94,7 +95,9 @@ class OpsControllerTests {
     @Test
     void crudExperimentRequiresConfirmationAndLocalhost() throws Exception {
         when(experiments.run("V0-OVERDRAFT")).thenReturn(new CrudExperimentResult(
+                java.util.UUID.randomUUID(), Instant.parse("2026-10-09T00:00:00Z"), "LIVE_BACKEND",
                 "V0-OVERDRAFT", "Chuyển quá số dư", "BUG_REPRODUCED", "negative balance",
+                List.of(new ExperimentAction(1, "POST", "/transfers", "amount=120000", 201)),
                 List.of(201), new CrudSnapshot(java.util.Map.of("user-A", "100000"), 0),
                 new CrudSnapshot(java.util.Map.of("user-A", "-20000"), 1)));
 
@@ -109,6 +112,8 @@ class OpsControllerTests {
                         .with(request -> { request.setRemoteAddr("127.0.0.1"); return request; })
                         .contentType("application/json").content("{\"confirmed\":true}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.verdict").value("BUG_REPRODUCED"));
+                .andExpect(jsonPath("$.verdict").value("BUG_REPRODUCED"))
+                .andExpect(jsonPath("$.executionMode").value("LIVE_BACKEND"))
+                .andExpect(jsonPath("$.actions[0].path").value("/transfers"));
     }
 }

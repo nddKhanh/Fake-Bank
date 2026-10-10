@@ -27,6 +27,7 @@ public class OpsController {
                 "labEnabled", false,
                 "resetEnabled", true,
                 "crudExperimentsEnabled", true,
+                "crudExperimentsMode", "LIVE_BACKEND",
                 "dataSource", "WALLET_V0_READ_ONLY",
                 "limitations", List.of("ledger", "outbox", "callbacks", "reconciliation", "scenario-runs")
         );
